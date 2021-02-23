@@ -57,9 +57,11 @@ def main():
     y = 0
     direction = Direction.DOWN
     hall_length = 1
+    stairs_drawn = False
+    cards_drawn = 0
 
     dungeon[y][x] = Room.START
-    while len(cards) > 10:
+    while not (cards_drawn >= 7 and stairs_drawn):
         # Move to the next position
         if direction == Direction.RIGHT:
             x = x + 1
@@ -67,10 +69,17 @@ def main():
             y = y + 1
 
         # Add a card to the dungeon
-        dungeon[y][x] = draw()
+        room = draw()
+        if room == Room.STAIRCASE:
+            if stairs_drawn:
+                room = Room.SAFE
+            else:
+                stairs_drawn = True
+        dungeon[y][x] = room
+        hall_length = hall_length + 1
+        cards_drawn = cards_drawn + 1
 
         # Branch if we need to
-        hall_length = hall_length + 1
         if hall_length >= 5:
             if direction == Direction.RIGHT:
                 x = x - randrange(1, 4)
