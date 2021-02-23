@@ -13,6 +13,21 @@ class Room(Enum):
     HAZARD = 6
     DEATH = 7
     ENEMY = 8
+    START = 9
+
+
+SPRITES = {
+    Room.NONE: '  ',
+    Room.STAIRCASE: '//',
+    Room.TREASURE: '$$',
+    Room.EMPTY: '[]',
+    Room.SAFE: '<3',
+    Room.GUARDED_TREASURE: 'X$',
+    Room.HAZARD: '/\\',
+    Room.DEATH: '8X',
+    Room.ENEMY: '\\O',
+    Room.START: '\\\\'
+}
 
 
 @unique
