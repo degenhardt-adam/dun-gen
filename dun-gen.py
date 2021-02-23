@@ -15,6 +15,12 @@ class Room(Enum):
     ENEMY = 8
 
 
+@unique
+class Direction(Enum):
+    RIGHT = 0
+    DOWN = 1
+
+
 def main():
     cards = \
         [Room.STAIRCASE] * 2 + \
@@ -29,9 +35,25 @@ def main():
     def draw():
         return cards.pop(randrange(len(cards)))
     
-    while len(cards) > 0:
-        print(draw())
-        
+    rows, columns = (16, 16)
+    dungeon = [[Room.NONE for i in range(columns)] for j in range(rows)]
+
+    x = 0
+    y = 0
+    direction = Direction.RIGHT
+
+    while len(cards) > 10:
+        # Add a card to the dungeon
+        dungeon[y][x] = draw()
+
+        # Move to the next position
+        if direction == Direction.RIGHT:
+            x = x + 1
+        elif direction == Direction.DOWN:
+            y = y + 1
+
+    # Print dungeon
+    print(dungeon)
 
 
 if __name__ == "__main__":
