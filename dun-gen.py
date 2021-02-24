@@ -17,6 +17,10 @@ class RoomType(Enum):
 
 
 class Deck():
+    """
+    A deck of Major Arcana cards. Specific arcana are not represented - only
+    the number of cards for each room type.
+    """
     _cards = \
         [RoomType.STAIRCASE] * 2 + \
         [RoomType.TREASURE] * 4 + \
