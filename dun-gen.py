@@ -35,10 +35,14 @@ class Deck:
             [RoomType.HAZARD] * 2 + \
             [RoomType.DEATH] + \
             [RoomType.ENEMY] * 7
+        self._initial_count = len(self._cards)
 
     def draw(self):
         assert(len(self._cards) >= 0)
         return self._cards.pop(randrange(len(self._cards)))
+
+    def cards_drawn(self):
+        return self._initial_count - len(self._cards)
 
 
 class Room:
@@ -83,6 +87,32 @@ class Dungeon:
         self._check_valid_coords(x, y)
         assert(self._rooms[y][x].down_door_exists == False)
         self._rooms[y][x].down_door_exists = True
+
+    def can_build_direction(self, direction, x, y):
+        self._check_valid_coords(x, y)
+        for i in range(1, MAX_HALLWAY_LENGTH):
+            if direction == Direction.RIGHT:
+                if x + i >= self.dungeon_size:
+                    return False
+                if self.room_written(x + i, y):
+                    return False
+            elif direction == Direction.LEFT:
+                if x - i < 0:
+                    return False
+                if self.room_written(x - i, y):
+                    return False
+            elif direction == Direction.UP:
+                if y - i < 0:
+                    return False
+                if self.room_written(x, y - i):
+                    return False
+            elif direction == Direction.DOWN:
+                if y + i >= self.dungeon_size:
+                    return False
+                if self.room_written(x, y + i):
+                    return False
+        return True
+
 
 
 class TextRenderer:
@@ -161,34 +191,9 @@ def main():
     y = dungeon_size / 2
     hall_length = 1
     stairs_drawn = False
-    cards_drawn = 0
-
-    def can_build_direction(direction):
-        for i in range(1, MAX_HALLWAY_LENGTH):
-            if direction == Direction.RIGHT:
-                if x + i >= dungeon_size:
-                    return False
-                if dungeon.room_written(x + i, y):
-                    return False
-            elif direction == Direction.LEFT:
-                if x - i < 0:
-                    return False
-                if dungeon.room_written(x - i, y):
-                    return False
-            elif direction == Direction.UP:
-                if y - i < 0:
-                    return False
-                if dungeon.room_written(x, y - i):
-                    return False
-            elif direction == Direction.DOWN:
-                if y + i >= dungeon_size:
-                    return False
-                if dungeon.room_written(x, y + i):
-                    return False
-        return True
 
     def choose_direction(candidate_directions):
-        candidates = [x for x in candidate_directions if can_build_direction(x)]
+        candidates = [c for c in candidate_directions if dungeon.can_build_direction(c, x, y)]
         if len(candidates) == 0:
             renderer = TextRenderer(dungeon)
             renderer.render()
@@ -201,7 +206,7 @@ def main():
     direction = choose_direction([Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT])
 
     dungeon.set_room_type(x, y, RoomType.START)
-    while not (cards_drawn >= 7 and stairs_drawn):
+    while not (deck.cards_drawn() >= 7 and stairs_drawn):
         # Make a door and move to the next position
         if direction == Direction.RIGHT:
             dungeon.add_right_door(x, y)
@@ -227,7 +232,6 @@ def main():
                 stairs_drawn = True
         dungeon.set_room_type(x, y, room)
         hall_length = hall_length + 1
-        cards_drawn = cards_drawn + 1
 
         # Branch if we need to
         if hall_length >= MAX_HALLWAY_LENGTH:
