@@ -15,6 +15,23 @@ class RoomType(Enum):
     ENEMY = 8
     START = 9
 
+
+class Deck():
+    _cards = \
+        [RoomType.STAIRCASE] * 2 + \
+        [RoomType.TREASURE] * 4 + \
+        [RoomType.EMPTY] * 3 + \
+        [RoomType.SAFE] * 2 + \
+        [RoomType.GUARDED_TREASURE] + \
+        [RoomType.HAZARD] * 2 + \
+        [RoomType.DEATH] + \
+        [RoomType.ENEMY] * 7
+
+    def draw(self):
+        assert(len(self._cards) >= 0)
+        return self._cards.pop(randrange(len(self._cards)))
+
+
 SPRITES = {
     RoomType.NONE: '  ',
     RoomType.STAIRCASE: '//',
@@ -46,19 +63,8 @@ class Room:
 
 
 def main():
-    cards = \
-        [RoomType.STAIRCASE] * 2 + \
-        [RoomType.TREASURE] * 4 + \
-        [RoomType.EMPTY] * 3 + \
-        [RoomType.SAFE] * 2 + \
-        [RoomType.GUARDED_TREASURE] + \
-        [RoomType.HAZARD] * 2 + \
-        [RoomType.DEATH] + \
-        [RoomType.ENEMY] * 7
     
-    def draw():
-        assert(len(cards) >= 0)
-        return cards.pop(randrange(len(cards)))
+    deck = Deck()
 
     dungeon = [[Room() for i in range(DUNGEON_SIZE)] for j in range(DUNGEON_SIZE)]
 
@@ -122,7 +128,7 @@ def main():
             dungeon[y][x].down_door_exists = True
 
         # Add a card to the dungeon
-        room = draw()
+        room = deck.draw()
         if room == RoomType.STAIRCASE:
             if stairs_drawn:
                 room = RoomType.SAFE
