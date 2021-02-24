@@ -3,7 +3,8 @@ from random import randrange
 
 
 MAX_HALLWAY_LENGTH = 5
-DEFAULT_DUNGEON_SIZE = 15
+DEFAULT_DUNGEON_SIZE = 30
+
 
 @unique
 class RoomType(Enum):
@@ -50,13 +51,13 @@ class Dungeon:
     def __init__(self, dungeon_size=DEFAULT_DUNGEON_SIZE):
         self._rooms = \
             [[Room() for i in range(dungeon_size)] for j in range(dungeon_size)]
-        self._dungeon_size = dungeon_size
+        self.dungeon_size = dungeon_size
 
     def _check_valid_coords(self, x, y):
         assert(x >= 0)
-        assert(x < self._dungeon_size)
+        assert(x < self.dungeon_size)
         assert(y >= 0)
-        assert(y < self._dungeon_size)
+        assert(y < self.dungeon_size)
 
     def get_room_type(self, x, y):
         self._check_valid_coords(x, y)
@@ -66,7 +67,11 @@ class Dungeon:
         return self.get_room_type(x, y) != RoomType.NONE
 
     def set_room_type(self, x, y, room_type):
-        assert(not self.room_written(x, y))
+        if self.room_written(x, y):
+            renderer = TextRenderer(self)
+            renderer.render()
+            print('Tried to overwrite room at {}, {}'.format(x, y))
+            assert(False)
         self._rooms[y][x].room_type = room_type
 
     def add_right_door(self, x, y):
@@ -80,18 +85,63 @@ class Dungeon:
         self._rooms[y][x].down_door_exists = True
 
 
-SPRITES = {
-    RoomType.NONE: '  ',
-    RoomType.STAIRCASE: '//',
-    RoomType.TREASURE: '$$',
-    RoomType.EMPTY: '[]',
-    RoomType.SAFE: '<3',
-    RoomType.GUARDED_TREASURE: 'X$',
-    RoomType.HAZARD: '/\\',
-    RoomType.DEATH: '8X',
-    RoomType.ENEMY: '\\O',
-    RoomType.START: '\\\\'
-}
+class TextRenderer:
+    sprites = {
+        RoomType.NONE: '  ',
+        RoomType.STAIRCASE: '//',
+        RoomType.TREASURE: '$$',
+        RoomType.EMPTY: '[]',
+        RoomType.SAFE: '<3',
+        RoomType.GUARDED_TREASURE: 'X$',
+        RoomType.HAZARD: '/\\',
+        RoomType.DEATH: '8X',
+        RoomType.ENEMY: '\\O',
+        RoomType.START: '\\\\'
+    }
+
+    def __init__(self, dungeon):
+        self._dungeon = dungeon
+
+    def render(self):
+        # Print legend
+        gap = '    '
+        print('')
+        print( \
+            TextRenderer.sprites[RoomType.START] + ' Entrance' + gap + \
+            TextRenderer.sprites[RoomType.STAIRCASE] + ' Stairs' + gap + \
+            TextRenderer.sprites[RoomType.TREASURE] + ' Treasure' + gap + \
+            TextRenderer.sprites[RoomType.EMPTY] + ' Empty' + gap + \
+            TextRenderer.sprites[RoomType.SAFE] + ' Safe' \
+        )
+        print( \
+            TextRenderer.sprites[RoomType.GUARDED_TREASURE] + ' Guarded Treasure' + gap + \
+            TextRenderer.sprites[RoomType.HAZARD] + ' Hazard' + gap + \
+            TextRenderer.sprites[RoomType.DEATH] + ' Death' + gap + \
+            TextRenderer.sprites[RoomType.ENEMY] + ' Enemy Encounter' \
+        )
+        print('')
+
+        # Crop empty space around dungeon
+        # TODO
+
+        # Render dungeon
+        border = '*' + ('~' * 60) + '*'
+        print(border)
+        print('')
+        for row in self._dungeon._rooms:
+            if not all(room.room_type == RoomType.NONE for room in row):
+                row_render = ' '
+                hall_row_render = ' '
+                for room in row:
+                    right_hall = '__' if room.right_door_exists else '  '
+                    row_render = row_render + TextRenderer.sprites[room.room_type] + right_hall
+                    down_hall = ' |' if room.down_door_exists else '  '
+                    hall_row_render = hall_row_render + down_hall + '  '
+                print(row_render)
+                print(hall_row_render)
+        print(border)
+        print('')
+
 
 @unique
 class Direction(Enum):
@@ -104,7 +154,7 @@ class Direction(Enum):
 def main():
     
     deck = Deck()
-    dungeon_size = 15
+    dungeon_size = 30
     dungeon = Dungeon(dungeon_size)
 
     x = dungeon_size / 2
@@ -138,11 +188,13 @@ def main():
         return True
 
     def choose_direction(candidate_directions):
-        for candidate in candidate_directions:
-            if not can_build_direction(candidate):
-                candidate_directions.remove(candidate)
-        assert(len(candidate_directions) > 0)
-        return candidate_directions[randrange(len(candidate_directions))]
+        candidates = [x for x in candidate_directions if can_build_direction(x)]
+        if len(candidates) == 0:
+            renderer = TextRenderer(dungeon)
+            renderer.render()
+            print("No valid directions to branch")
+            assert(False)
+        return candidates[randrange(len(candidates))]
 
     # Generate dungeon
     # Start in a random direction
@@ -193,41 +245,9 @@ def main():
                 direction = choose_direction([Direction.RIGHT, Direction.LEFT])
             hall_length = 1
 
-    # Print legend
-    gap = '    '
-    print('')
-    print( \
-        SPRITES[RoomType.START] + ' Entrance' + gap + \
-        SPRITES[RoomType.STAIRCASE] + ' Stairs' + gap + \
-        SPRITES[RoomType.TREASURE] + ' Treasure' + gap + \
-        SPRITES[RoomType.EMPTY] + ' Empty' + gap + \
-        SPRITES[RoomType.SAFE] + ' Safe' \
-    )
-    print( \
-        SPRITES[RoomType.GUARDED_TREASURE] + ' Guarded Treasure' + gap + \
-        SPRITES[RoomType.HAZARD] + ' Hazard' + gap + \
-        SPRITES[RoomType.DEATH] + ' Death' + gap + \
-        SPRITES[RoomType.ENEMY] + ' Enemy Encounter' \
-    )
-    print('')
-
-    # Render dungeon
-    border = '*' + ('~' * 4 * DEFAULT_DUNGEON_SIZE) + '*'
-    print(border)
-    print('')
-    for row in dungeon._rooms:
-        if not all(room.room_type == RoomType.NONE for room in row):
-            row_render = ' '
-            hall_row_render = ' '
-            for room in row:
-                right_hall = '__' if room.right_door_exists else '  '
-                row_render = row_render + SPRITES[room.room_type] + right_hall
-                down_hall = ' |' if room.down_door_exists else '  '
-                hall_row_render = hall_row_render + down_hall + '  '
-            print(row_render)
-            print(hall_row_render)
-    print(border)
-    print('')
+    # Print the dungeon render
+    renderer = TextRenderer(dungeon)
+    renderer.render()
 
 
 if __name__ == "__main__":
