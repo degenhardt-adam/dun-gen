@@ -2,6 +2,9 @@ from enum import Enum, unique
 from random import randrange
 
 
+MAX_HALLWAY_LENGTH = 5
+DEFAULT_DUNGEON_SIZE = 15
+
 @unique
 class RoomType(Enum):
     NONE = 0
@@ -16,24 +19,65 @@ class RoomType(Enum):
     START = 9
 
 
-class Deck():
+class Deck:
     """
     A deck of Major Arcana cards. Specific arcana are not represented - only
     the number of cards for each room type.
     """
-    _cards = \
-        [RoomType.STAIRCASE] * 2 + \
-        [RoomType.TREASURE] * 4 + \
-        [RoomType.EMPTY] * 3 + \
-        [RoomType.SAFE] * 2 + \
-        [RoomType.GUARDED_TREASURE] + \
-        [RoomType.HAZARD] * 2 + \
-        [RoomType.DEATH] + \
-        [RoomType.ENEMY] * 7
+    def __init__(self):
+        self._cards = \
+            [RoomType.STAIRCASE] * 2 + \
+            [RoomType.TREASURE] * 4 + \
+            [RoomType.EMPTY] * 3 + \
+            [RoomType.SAFE] * 2 + \
+            [RoomType.GUARDED_TREASURE] + \
+            [RoomType.HAZARD] * 2 + \
+            [RoomType.DEATH] + \
+            [RoomType.ENEMY] * 7
 
     def draw(self):
         assert(len(self._cards) >= 0)
         return self._cards.pop(randrange(len(self._cards)))
+
+
+class Room:
+    right_door_exists = False
+    down_door_exists = False
+    room_type = RoomType.NONE
+
+
+class Dungeon:
+    def __init__(self, dungeon_size=DEFAULT_DUNGEON_SIZE):
+        self._rooms = \
+            [[Room() for i in range(dungeon_size)] for j in range(dungeon_size)]
+        self._dungeon_size = dungeon_size
+
+    def _check_valid_coords(self, x, y):
+        assert(x >= 0)
+        assert(x < self._dungeon_size)
+        assert(y >= 0)
+        assert(y < self._dungeon_size)
+
+    def get_room_type(self, x, y):
+        self._check_valid_coords(x, y)
+        return self._rooms[y][x].room_type
+
+    def room_written(self, x, y):
+        return self.get_room_type(x, y) != RoomType.NONE
+
+    def set_room_type(self, x, y, room_type):
+        assert(not self.room_written(x, y))
+        self._rooms[y][x].room_type = room_type
+
+    def add_right_door(self, x, y):
+        self._check_valid_coords(x, y)
+        assert(self._rooms[y][x].right_door_exists == False)
+        self._rooms[y][x].right_door_exists = True
+
+    def add_down_door(self, x, y):
+        self._check_valid_coords(x, y)
+        assert(self._rooms[y][x].down_door_exists == False)
+        self._rooms[y][x].down_door_exists = True
 
 
 SPRITES = {
@@ -49,9 +93,6 @@ SPRITES = {
     RoomType.START: '\\\\'
 }
 
-MAX_HALLWAY_LENGTH = 5
-DUNGEON_SIZE = 15
-
 @unique
 class Direction(Enum):
     RIGHT = 0
@@ -60,20 +101,14 @@ class Direction(Enum):
     UP = 3
 
 
-class Room:
-    right_door_exists = False
-    down_door_exists = False
-    room_type = RoomType.NONE
-
-
 def main():
     
     deck = Deck()
+    dungeon_size = 15
+    dungeon = Dungeon(dungeon_size)
 
-    dungeon = [[Room() for i in range(DUNGEON_SIZE)] for j in range(DUNGEON_SIZE)]
-
-    x = DUNGEON_SIZE / 2
-    y = DUNGEON_SIZE / 2
+    x = dungeon_size / 2
+    y = dungeon_size / 2
     hall_length = 1
     stairs_drawn = False
     cards_drawn = 0
@@ -81,24 +116,24 @@ def main():
     def can_build_direction(direction):
         for i in range(1, MAX_HALLWAY_LENGTH):
             if direction == Direction.RIGHT:
-                if x + i >= DUNGEON_SIZE:
+                if x + i >= dungeon_size:
                     return False
-                if dungeon[y][x + i].room_type != RoomType.NONE:
+                if dungeon.room_written(x + i, y):
                     return False
             elif direction == Direction.LEFT:
                 if x - i < 0:
                     return False
-                if dungeon[y][x - i].room_type != RoomType.NONE:
+                if dungeon.room_written(x - i, y):
                     return False
             elif direction == Direction.UP:
                 if y - i < 0:
                     return False
-                if dungeon[y - i][x].room_type != RoomType.NONE:
+                if dungeon.room_written(x, y - i):
                     return False
             elif direction == Direction.DOWN:
-                if y + i >= DUNGEON_SIZE:
+                if y + i >= dungeon_size:
                     return False
-                if dungeon[y + i][x].room_type != RoomType.NONE:
+                if dungeon.room_written(x, y + i):
                     return False
         return True
 
@@ -113,23 +148,23 @@ def main():
     # Start in a random direction
     direction = choose_direction([Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT])
 
-    dungeon[y][x].room_type = RoomType.START
+    dungeon.set_room_type(x, y, RoomType.START)
     while not (cards_drawn >= 7 and stairs_drawn):
         # Make a door and move to the next position
         if direction == Direction.RIGHT:
-            dungeon[y][x].right_door_exists = True
+            dungeon.add_right_door(x, y)
             x = x + 1
         elif direction == Direction.DOWN:
-            dungeon[y][x].down_door_exists = True
+            dungeon.add_down_door(x, y)
             y = y + 1
         elif direction == Direction.LEFT:
             x = x - 1
             assert(x >= 0)
-            dungeon[y][x].right_door_exists = True
+            dungeon.add_right_door(x, y)
         elif direction == Direction.UP:
             y = y - 1
             assert(y >= 0)
-            dungeon[y][x].down_door_exists = True
+            dungeon.add_down_door(x, y)
 
         # Add a card to the dungeon
         room = deck.draw()
@@ -138,7 +173,7 @@ def main():
                 room = RoomType.SAFE
             else:
                 stairs_drawn = True
-        dungeon[y][x].room_type = room
+        dungeon.set_room_type(x, y, room)
         hall_length = hall_length + 1
         cards_drawn = cards_drawn + 1
 
@@ -177,10 +212,10 @@ def main():
     print('')
 
     # Render dungeon
-    border = '*' + ('~' * 4 * DUNGEON_SIZE) + '*'
+    border = '*' + ('~' * 4 * DEFAULT_DUNGEON_SIZE) + '*'
     print(border)
     print('')
-    for row in dungeon:
+    for row in dungeon._rooms:
         if not all(room.room_type == RoomType.NONE for room in row):
             row_render = ' '
             hall_row_render = ' '
