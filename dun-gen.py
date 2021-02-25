@@ -57,6 +57,10 @@ class Dungeon:
             [[Room() for i in range(dungeon_size)] for j in range(dungeon_size)]
         self.dungeon_size = dungeon_size
 
+        # Keep track of the horizontal bounds of the dungeon so it can be cropped during render
+        self.leftmost = dungeon_size
+        self.rightmost = 0
+
     def _check_valid_coords(self, x, y):
         assert(x >= 0)
         assert(x < self.dungeon_size)
@@ -77,6 +81,12 @@ class Dungeon:
             print('Tried to overwrite room at {}, {}'.format(x, y))
             assert(False)
         self._rooms[y][x].room_type = room_type
+
+        # Update horizontal bounds
+        if x < self.leftmost:
+            self.leftmost = x
+        if x > self.rightmost:
+            self.rightmost = x
 
     def add_right_door(self, x, y):
         self._check_valid_coords(x, y)
@@ -116,6 +126,8 @@ class Dungeon:
 
 
 class TextRenderer:
+    ROW_MARGIN = 16
+
     sprites = {
         RoomType.NONE: '  ',
         RoomType.STAIRCASE: '//',
@@ -151,18 +163,15 @@ class TextRenderer:
         )
         print('')
 
-        # Crop empty space around dungeon
-        # TODO
-
         # Render dungeon
         border = '*' + ('~' * 60) + '*'
         print(border)
         print('')
         for row in self._dungeon._rooms:
             if not all(room.room_type == RoomType.NONE for room in row):
-                row_render = ' '
-                hall_row_render = ' '
-                for room in row:
+                row_render = ' ' * TextRenderer.ROW_MARGIN
+                hall_row_render = ' ' * TextRenderer.ROW_MARGIN
+                for room in row[self._dungeon.leftmost : self._dungeon.rightmost + 1]:
                     right_hall = '__' if room.right_door_exists else '  '
                     row_render = row_render + TextRenderer.sprites[room.room_type] + right_hall
                     down_hall = ' |' if room.down_door_exists else '  '
