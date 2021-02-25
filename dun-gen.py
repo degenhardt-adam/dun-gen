@@ -4,7 +4,6 @@
 __author__ = 'Adam Degenhardt'
 
 
-from enum import Enum, unique
 from math import floor
 from random import randrange
 
@@ -13,18 +12,24 @@ MAX_HALLWAY_LENGTH = 5
 DEFAULT_DUNGEON_SIZE = 30
 
 
-@unique
-class RoomType(Enum):
-    NONE = 0
-    STAIRCASE = 1
-    TREASURE = 2
-    EMPTY = 3
-    SAFE = 4
-    GUARDED_TREASURE = 5
-    HAZARD = 6
-    DEATH = 7
-    ENEMY = 8
-    START = 9
+# Room Types
+NONE = 0
+STAIRCASE = 1
+TREASURE = 2
+EMPTY = 3
+SAFE = 4
+GUARDED_TREASURE = 5
+HAZARD = 6
+DEATH = 7
+ENEMY = 8
+START = 9
+
+
+# Directions
+RIGHT = 0
+DOWN = 1
+LEFT = 2
+UP = 3
 
 
 class Deck:
@@ -34,14 +39,14 @@ class Deck:
     """
     def __init__(self):
         self._cards = \
-            [RoomType.STAIRCASE] * 2 + \
-            [RoomType.TREASURE] * 4 + \
-            [RoomType.EMPTY] * 3 + \
-            [RoomType.SAFE] * 2 + \
-            [RoomType.GUARDED_TREASURE] + \
-            [RoomType.HAZARD] * 2 + \
-            [RoomType.DEATH] + \
-            [RoomType.ENEMY] * 7
+            [STAIRCASE] * 2 + \
+            [TREASURE] * 4 + \
+            [EMPTY] * 3 + \
+            [SAFE] * 2 + \
+            [GUARDED_TREASURE] + \
+            [HAZARD] * 2 + \
+            [DEATH] + \
+            [ENEMY] * 7
         self._initial_count = len(self._cards)
 
     def draw(self):
@@ -56,7 +61,7 @@ class Room:
     """Represents one room in the dungeon"""
     right_door_exists = False
     down_door_exists = False
-    room_type = RoomType.NONE
+    room_type = NONE
 
 
 class Dungeon:
@@ -81,7 +86,7 @@ class Dungeon:
         return self._rooms[y][x].room_type
 
     def room_written(self, x, y):
-        return self.get_room_type(x, y) != RoomType.NONE
+        return self.get_room_type(x, y) != NONE
 
     def set_room_type(self, x, y, room_type):
         if self.room_written(x, y):
@@ -110,22 +115,22 @@ class Dungeon:
     def can_build_direction(self, direction, x, y):
         self._check_valid_coords(x, y)
         for i in range(1, MAX_HALLWAY_LENGTH):
-            if direction == Direction.RIGHT:
+            if direction == RIGHT:
                 if x + i >= self.dungeon_size:
                     return False
                 if self.room_written(x + i, y):
                     return False
-            elif direction == Direction.LEFT:
+            elif direction == LEFT:
                 if x - i < 0:
                     return False
                 if self.room_written(x - i, y):
                     return False
-            elif direction == Direction.UP:
+            elif direction == UP:
                 if y - i < 0:
                     return False
                 if self.room_written(x, y - i):
                     return False
-            elif direction == Direction.DOWN:
+            elif direction == DOWN:
                 if y + i >= self.dungeon_size:
                     return False
                 if self.room_written(x, y + i):
@@ -139,16 +144,16 @@ class TextRenderer:
     ROW_MARGIN = 16
 
     sprites = {
-        RoomType.NONE: '  ',
-        RoomType.STAIRCASE: '//',
-        RoomType.TREASURE: '$$',
-        RoomType.EMPTY: '[]',
-        RoomType.SAFE: '<3',
-        RoomType.GUARDED_TREASURE: 'X$',
-        RoomType.HAZARD: '/\\',
-        RoomType.DEATH: '8X',
-        RoomType.ENEMY: '\\O',
-        RoomType.START: '\\\\'
+        NONE: '  ',
+        STAIRCASE: '//',
+        TREASURE: '$$',
+        EMPTY: '[]',
+        SAFE: '<3',
+        GUARDED_TREASURE: 'X$',
+        HAZARD: '/\\',
+        DEATH: '8X',
+        ENEMY: '\\O',
+        START: '\\\\'
     }
 
     def __init__(self, dungeon):
@@ -159,17 +164,17 @@ class TextRenderer:
         gap = '    '
         print('')
         print( \
-            TextRenderer.sprites[RoomType.START] + ' Entrance' + gap + \
-            TextRenderer.sprites[RoomType.STAIRCASE] + ' Stairs' + gap + \
-            TextRenderer.sprites[RoomType.TREASURE] + ' Treasure' + gap + \
-            TextRenderer.sprites[RoomType.EMPTY] + ' Empty' + gap + \
-            TextRenderer.sprites[RoomType.SAFE] + ' Safe' \
+            TextRenderer.sprites[START] + ' Entrance' + gap + \
+            TextRenderer.sprites[STAIRCASE] + ' Stairs' + gap + \
+            TextRenderer.sprites[TREASURE] + ' Treasure' + gap + \
+            TextRenderer.sprites[EMPTY] + ' Empty' + gap + \
+            TextRenderer.sprites[SAFE] + ' Safe' \
         )
         print( \
-            TextRenderer.sprites[RoomType.GUARDED_TREASURE] + ' Guarded Treasure' + gap + \
-            TextRenderer.sprites[RoomType.HAZARD] + ' Hazard' + gap + \
-            TextRenderer.sprites[RoomType.DEATH] + ' Death' + gap + \
-            TextRenderer.sprites[RoomType.ENEMY] + ' Enemy Encounter' \
+            TextRenderer.sprites[GUARDED_TREASURE] + ' Guarded Treasure' + gap + \
+            TextRenderer.sprites[HAZARD] + ' Hazard' + gap + \
+            TextRenderer.sprites[DEATH] + ' Death' + gap + \
+            TextRenderer.sprites[ENEMY] + ' Enemy Encounter' \
         )
         print('')
 
@@ -178,7 +183,7 @@ class TextRenderer:
         print(border)
         print('')
         for row in self._dungeon._rooms:
-            if not all(room.room_type == RoomType.NONE for room in row):
+            if not all(room.room_type == NONE for room in row):
                 row_render = ' ' * TextRenderer.ROW_MARGIN
                 hall_row_render = ' ' * TextRenderer.ROW_MARGIN
                 for room in row[self._dungeon.leftmost : self._dungeon.rightmost + 1]:
@@ -192,12 +197,27 @@ class TextRenderer:
         print('')
 
 
-@unique
-class Direction(Enum):
-    RIGHT = 0
-    DOWN = 1
-    LEFT = 2
-    UP = 3
+class HTMLRenderer():
+    """Renders a dungeon in HTML"""
+
+    sprites = {
+        NONE: '  ',
+        STAIRCASE: '//',
+        TREASURE: '$$',
+        EMPTY: '[]',
+        SAFE: '<3',
+        GUARDED_TREASURE: 'X$',
+        HAZARD: '/\\',
+        DEATH: '8X',
+        ENEMY: '\\O',
+        START: '\\\\'
+    }
+
+    def __init__(self, dungeon):
+        self._dungeon = dungeon
+
+    def render(self):
+        document.getElementById('dungeon').innerHTML = 'This is where I would put a dungeon... IF I HAD ANY'
 
 
 def main():
@@ -227,31 +247,31 @@ def main():
 
     # Generate dungeon
     # Start in a random direction
-    direction = choose_direction([Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT])
+    direction = choose_direction([UP, DOWN, LEFT, RIGHT])
 
-    dungeon.set_room_type(x, y, RoomType.START)
+    dungeon.set_room_type(x, y, START)
     while not (deck.cards_drawn() >= 7 and stairs_drawn):
         # Make a door and move to the next position
-        if direction == Direction.RIGHT:
+        if direction == RIGHT:
             dungeon.add_right_door(x, y)
             x = x + 1
-        elif direction == Direction.DOWN:
+        elif direction == DOWN:
             dungeon.add_down_door(x, y)
             y = y + 1
-        elif direction == Direction.LEFT:
+        elif direction == LEFT:
             x = x - 1
             assert(x >= 0)
             dungeon.add_right_door(x, y)
-        elif direction == Direction.UP:
+        elif direction == UP:
             y = y - 1
             assert(y >= 0)
             dungeon.add_down_door(x, y)
 
         # Add a card to the current space
         room = deck.draw()
-        if room == RoomType.STAIRCASE:
+        if room == STAIRCASE:
             if stairs_drawn:
-                room = RoomType.SAFE
+                room = SAFE
             else:
                 stairs_drawn = True
         dungeon.set_room_type(x, y, room)
@@ -260,22 +280,22 @@ def main():
         # Branch if we need to. Choose the start of the new branch randomly
         # from non-end spaces in the current branch
         if hall_length >= MAX_HALLWAY_LENGTH:
-            if direction == Direction.RIGHT:
+            if direction == RIGHT:
                 x = x - randrange(1, 4)
-                direction = choose_direction([Direction.UP, Direction.DOWN])
-            elif direction == Direction.LEFT:
+                direction = choose_direction([UP, DOWN])
+            elif direction == LEFT:
                 x = x + randrange(1, 4)
-                direction = choose_direction([Direction.UP, Direction.DOWN])
-            elif direction == Direction.DOWN:
+                direction = choose_direction([UP, DOWN])
+            elif direction == DOWN:
                 y = y - randrange(1, 4)
-                direction = choose_direction([Direction.RIGHT, Direction.LEFT])
-            elif direction == Direction.UP:
+                direction = choose_direction([RIGHT, LEFT])
+            elif direction == UP:
                 y = y + randrange(1, 4)
-                direction = choose_direction([Direction.RIGHT, Direction.LEFT])
+                direction = choose_direction([RIGHT, LEFT])
             hall_length = 1
 
     # Print the dungeon render
-    renderer = TextRenderer(dungeon)
+    renderer = HTMLRenderer(dungeon)
     renderer.render()
 
 
