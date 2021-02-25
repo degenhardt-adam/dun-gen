@@ -5,6 +5,7 @@ __author__ = 'Adam Degenhardt'
 
 
 from enum import Enum, unique
+from math import floor
 from random import randrange
 
 
@@ -206,8 +207,8 @@ def main():
     dungeon_size = 30
     dungeon = Dungeon(dungeon_size)
 
-    x = dungeon_size / 2
-    y = dungeon_size / 2
+    x = floor(dungeon_size / 2)
+    y = floor(dungeon_size / 2)
     hall_length = 1
     stairs_drawn = False
 
