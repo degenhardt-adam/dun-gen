@@ -1,3 +1,9 @@
+"""Generates one floor of a dungeon for Nat Twentea's The Masks We Wear v3.1"""
+
+
+__author__ = 'Adam Degenhardt'
+
+
 from enum import Enum, unique
 from random import randrange
 
@@ -46,12 +52,14 @@ class Deck:
 
 
 class Room:
+    """Represents one room in the dungeon"""
     right_door_exists = False
     down_door_exists = False
     room_type = RoomType.NONE
 
 
 class Dungeon:
+    """Represents a dungeon floor. A 2D array of rooms"""
     def __init__(self, dungeon_size=DEFAULT_DUNGEON_SIZE):
         self._rooms = \
             [[Room() for i in range(dungeon_size)] for j in range(dungeon_size)]
@@ -126,6 +134,7 @@ class Dungeon:
 
 
 class TextRenderer:
+    """Renders a dungeon in ASCII art"""
     ROW_MARGIN = 16
 
     sprites = {
@@ -191,8 +200,9 @@ class Direction(Enum):
 
 
 def main():
-    
     deck = Deck()
+    # Must be around this size or larger or sometimes the generator gets "stuck" 
+    # down branches with no legal direction to branch to
     dungeon_size = 30
     dungeon = Dungeon(dungeon_size)
 
@@ -202,6 +212,10 @@ def main():
     stairs_drawn = False
 
     def choose_direction(candidate_directions):
+        """
+        Pick a direction in which we could build a full hallway without hitting
+        an existing room or going off the grid
+        """
         candidates = [c for c in candidate_directions if dungeon.can_build_direction(c, x, y)]
         if len(candidates) == 0:
             renderer = TextRenderer(dungeon)
@@ -232,7 +246,7 @@ def main():
             assert(y >= 0)
             dungeon.add_down_door(x, y)
 
-        # Add a card to the dungeon
+        # Add a card to the current space
         room = deck.draw()
         if room == RoomType.STAIRCASE:
             if stairs_drawn:
@@ -242,7 +256,8 @@ def main():
         dungeon.set_room_type(x, y, room)
         hall_length = hall_length + 1
 
-        # Branch if we need to
+        # Branch if we need to. Choose the start of the new branch randomly
+        # from non-end spaces in the current branch
         if hall_length >= MAX_HALLWAY_LENGTH:
             if direction == Direction.RIGHT:
                 x = x - randrange(1, 4)
