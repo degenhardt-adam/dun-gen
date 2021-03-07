@@ -159,7 +159,7 @@ class HTMLRenderer:
 
         def add_line(line):
             nonlocal render_string
-            render_string = '<pre>' + render_string + line + '<br /></pre>'
+            render_string = render_string + '<pre>' + line + '<br /></pre>'
 
         # Print legend
         gap = '    '
