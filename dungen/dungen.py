@@ -85,7 +85,7 @@ class Dungeon:
 
     def set_room_type(self, x, y, room_type):
         if self.room_written(x, y):
-            renderer = TextRenderer(self)
+            renderer = HTMLRenderer(self)
             renderer.render()
             print('Tried to overwrite room at {}, {}'.format(x, y))
             assert(False)
@@ -134,7 +134,7 @@ class Dungeon:
 
 
 
-class TextRenderer:
+class HTMLRenderer:
     """Renders a dungeon in ASCII art"""
     ROW_MARGIN = 16
 
@@ -155,41 +155,49 @@ class TextRenderer:
         self._dungeon = dungeon
 
     def render(self):
+        render_string = '<style>pre {margin: 0.0}</style>'
+
+        def add_line(line):
+            nonlocal render_string
+            render_string = '<pre>' + render_string + line + '<br /></pre>'
+
         # Print legend
         gap = '    '
-        print('')
-        print( \
-            TextRenderer.sprites[RoomType.START] + ' Entrance' + gap + \
-            TextRenderer.sprites[RoomType.STAIRCASE] + ' Stairs' + gap + \
-            TextRenderer.sprites[RoomType.TREASURE] + ' Treasure' + gap + \
-            TextRenderer.sprites[RoomType.EMPTY] + ' Empty' + gap + \
-            TextRenderer.sprites[RoomType.SAFE] + ' Safe' \
+        add_line('')
+        add_line( \
+            HTMLRenderer.sprites[RoomType.START] + ' Entrance' + gap + \
+            HTMLRenderer.sprites[RoomType.STAIRCASE] + ' Stairs' + gap + \
+            HTMLRenderer.sprites[RoomType.TREASURE] + ' Treasure' + gap + \
+            HTMLRenderer.sprites[RoomType.EMPTY] + ' Empty' + gap + \
+            HTMLRenderer.sprites[RoomType.SAFE] + ' Safe' \
         )
-        print( \
-            TextRenderer.sprites[RoomType.GUARDED_TREASURE] + ' Guarded Treasure' + gap + \
-            TextRenderer.sprites[RoomType.HAZARD] + ' Hazard' + gap + \
-            TextRenderer.sprites[RoomType.DEATH] + ' Death' + gap + \
-            TextRenderer.sprites[RoomType.ENEMY] + ' Enemy Encounter' \
+        add_line( \
+            HTMLRenderer.sprites[RoomType.GUARDED_TREASURE] + ' Guarded Treasure' + gap + \
+            HTMLRenderer.sprites[RoomType.HAZARD] + ' Hazard' + gap + \
+            HTMLRenderer.sprites[RoomType.DEATH] + ' Death' + gap + \
+            HTMLRenderer.sprites[RoomType.ENEMY] + ' Enemy Encounter' \
         )
-        print('')
+        add_line('')
 
         # Render dungeon
         border = '*' + ('~' * 60) + '*'
-        print(border)
-        print('')
+        add_line(border)
+        add_line('')
         for row in self._dungeon._rooms:
             if not all(room.room_type == RoomType.NONE for room in row):
-                row_render = ' ' * TextRenderer.ROW_MARGIN
-                hall_row_render = ' ' * TextRenderer.ROW_MARGIN
+                row_render = ' ' * HTMLRenderer.ROW_MARGIN
+                hall_row_render = ' ' * HTMLRenderer.ROW_MARGIN
                 for room in row[self._dungeon.leftmost : self._dungeon.rightmost + 1]:
                     right_hall = '__' if room.right_door_exists else '  '
-                    row_render = row_render + TextRenderer.sprites[room.room_type] + right_hall
+                    row_render = row_render + HTMLRenderer.sprites[room.room_type] + right_hall
                     down_hall = ' |' if room.down_door_exists else '  '
                     hall_row_render = hall_row_render + down_hall + '  '
-                print(row_render)
-                print(hall_row_render)
-        print(border)
-        print('')
+                add_line(row_render)
+                add_line(hall_row_render)
+        add_line(border)
+        add_line('')
+
+        return render_string
 
 
 @unique
@@ -200,7 +208,7 @@ class Direction(Enum):
     UP = 3
 
 
-def main():
+def generate():
     deck = Deck()
     # Must be around this size or larger or sometimes the generator gets "stuck" 
     # down branches with no legal direction to branch to
@@ -219,7 +227,7 @@ def main():
         """
         candidates = [c for c in candidate_directions if dungeon.can_build_direction(c, x, y)]
         if len(candidates) == 0:
-            renderer = TextRenderer(dungeon)
+            renderer = HTMLRenderer(dungeon)
             renderer.render()
             print("No valid directions to branch")
             assert(False)
@@ -275,9 +283,8 @@ def main():
             hall_length = 1
 
     # Print the dungeon render
-    renderer = TextRenderer(dungeon)
-    renderer.render()
-
+    renderer = HTMLRenderer(dungeon)
+    return renderer.render()
 
 if __name__ == "__main__":
-    main()
+    print(generate())
