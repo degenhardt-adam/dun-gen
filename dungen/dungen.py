@@ -8,6 +8,7 @@ from enum import Enum, unique
 from math import floor
 from random import randrange
 
+from .encounter import Encounter
 
 MAX_HALLWAY_LENGTH = 5
 DEFAULT_DUNGEON_SIZE = 30
@@ -57,6 +58,8 @@ class Room:
     right_door_exists = False
     down_door_exists = False
     room_type = RoomType.NONE
+    # Encounter if this is an encounter room
+    encounter = None
 
 
 class Dungeon:
@@ -69,6 +72,9 @@ class Dungeon:
         # Keep track of the horizontal bounds of the dungeon so it can be cropped during render
         self.leftmost = dungeon_size
         self.rightmost = 0
+
+        # Keep track of encounters so we can generate them at the end
+        self.encounters = []
 
     def _check_valid_coords(self, x, y):
         assert(x >= 0)
@@ -90,6 +96,9 @@ class Dungeon:
             print('Tried to overwrite room at {}, {}'.format(x, y))
             assert(False)
         self._rooms[y][x].room_type = room_type
+        if room_type in [RoomType.ENEMY, RoomType.GUARDED_TREASURE]:
+            self._rooms[y][x].encounter = Encounter(None) # TODO: supply arcana
+            self.encounters.append(self._rooms[y][x].encounter)
 
         # Update horizontal bounds
         if x < self.leftmost:
@@ -131,6 +140,11 @@ class Dungeon:
                 if self.room_written(x, y + i):
                     return False
         return True
+
+    def generate_encounters(self):
+        # TODO: set difficulty based on number of encounters
+        for encounter in self.encounters:
+            encounter.generate(None)
 
 
 
@@ -194,6 +208,15 @@ class HTMLRenderer:
                     hall_row_render = hall_row_render + down_hall + '  '
                 add_line(row_render)
                 add_line(hall_row_render)
+        add_line(border)
+        add_line('')
+
+        # Render encounters
+        add_line('Encounters:')
+        add_line('')
+        for encounter in self._dungeon.encounters:
+            render_string = render_string + encounter.renderHTML()
+        add_line('')
         add_line(border)
         add_line('')
 
@@ -281,6 +304,8 @@ def generate():
                 y = y + randrange(1, 4)
                 direction = choose_direction([Direction.RIGHT, Direction.LEFT])
             hall_length = 1
+
+    dungeon.generate_encounters()
 
     # Print the dungeon render
     renderer = HTMLRenderer(dungeon)
