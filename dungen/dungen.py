@@ -128,7 +128,7 @@ class Dungeon:
             assert(False)
         self._rooms[y][x].room_type = room_type
         if room_type in [RoomType.ENEMY, RoomType.GUARDED_TREASURE]:
-            self._rooms[y][x].encounter = Encounter(None) # TODO: supply arcana
+            self._rooms[y][x].encounter = Encounter(self.arcana)
             self.encounters.append(self._rooms[y][x].encounter)
 
         # Update horizontal bounds
@@ -274,16 +274,16 @@ class HTMLRenderer:
         add_line('')
 
         # List arcana
-        arcana_render = 'Arcana: '
-        for arcana in self._dungeon.arcana:
-            arcana_render = arcana_render + arcana.value +', '
-        arcana_render = arcana_render[0: -2]
-        add_line(arcana_render)
-        add_line('')
+        if False: # Disable for now
+            arcana_render = 'Arcana: '
+            for arcana in self._dungeon.arcana:
+                arcana_render = arcana_render + arcana.value +', '
+            arcana_render = arcana_render[0: -2]
+            add_line(arcana_render)
+            add_line('')
 
         # Render encounters
         add_line('Encounters:')
-        add_line('')
         for encounter in self._dungeon.encounters:
             render_string = render_string + encounter.renderHTML()
         add_line('')
