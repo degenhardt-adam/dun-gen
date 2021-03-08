@@ -4,6 +4,16 @@
 __author__ = "Adam Degenhardt"
 
 
+from enum import Enum, unique
+
+
+@unique
+class Difficulty(Enum):
+    EASY = 0
+    INTERMEDIATE = 1
+    DIFFICULT = 2
+
+
 class Encounter():
     """Represents one encounter in an encounter room"""
 
@@ -16,8 +26,14 @@ class Encounter():
         self.id = Encounter.next_id
         Encounter.next_id = Encounter.next_id + 1
 
-    def generate(self, difficulty):
-        self._enemies = "This is where enemies would go... IF I HAD ANY"
+    def generate_enemies(self, difficulty):
+        assert(difficulty in [d for d in Difficulty])
+        if difficulty == Difficulty.EASY:
+            self._enemies = "Easy encounter"
+        elif difficulty == Difficulty.INTERMEDIATE:
+            self._enemies = "Intermediate encounter"
+        elif difficulty == Difficulty.DIFFICULT:
+            self._enemies = "Hard encounter"
 
     def renderHTML(self):
         assert(self._enemies is not None)

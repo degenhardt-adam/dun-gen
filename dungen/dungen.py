@@ -8,7 +8,7 @@ from enum import Enum, unique
 from math import floor
 from random import randrange, sample
 
-from .encounter import Encounter
+from .encounter import Encounter, Difficulty
 
 MAX_HALLWAY_LENGTH = 5
 DEFAULT_DUNGEON_SIZE = 30
@@ -173,9 +173,36 @@ class Dungeon:
         return True
 
     def generate_encounters(self):
-        # TODO: set difficulty based on number of encounters
+        # Select difficulties of encounters
+        assert(len(self.encounters) <= 9)
+        num_encounters = len(self.encounters)
+        difficulties = []
+
+        # 0-3 encounters
+        if num_encounters <= 3:
+            difficulties = [Difficulty.DIFFICULT] * num_encounters
+
+        # 4-6 encounters
+        elif num_encounters in range(4, 7):
+            # Distribution in this range is based on talking to the developers
+            # The numbers listed in version 3.1 of the book don't add up to 4-6 encounters
+            difficulties = \
+                [Difficulty.DIFFICULT] + \
+                [Difficulty.INTERMEDIATE] + \
+                ([Difficulty.EASY] * 2)
+            extras = [Difficulty.INTERMEDIATE, Difficulty.EASY]
+            difficulties = difficulties + sample(extras, num_encounters - len(difficulties))
+
+        # 7+ encounters
+        else:
+            difficulties = ([Difficulty.EASY] * 3) + ([Difficulty.INTERMEDIATE] * 2)
+            extras = ([Difficulty.EASY] * 2) + ([Difficulty.INTERMEDIATE] * 2)
+            difficulties = difficulties + sample(extras, num_encounters - len(difficulties))
+
+        assert(len(difficulties) == len(self.encounters))
         for encounter in self.encounters:
-            encounter.generate(None)
+            encounter.generate_enemies(difficulties.pop(randrange(0, len(difficulties))))
+        assert(len(difficulties) == 0)
 
 
 
@@ -259,8 +286,6 @@ class HTMLRenderer:
         add_line('')
         for encounter in self._dungeon.encounters:
             render_string = render_string + encounter.renderHTML()
-        add_line('')
-        add_line(border)
         add_line('')
 
         return render_string
