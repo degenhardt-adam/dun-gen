@@ -6,7 +6,7 @@ __author__ = 'Adam Degenhardt'
 
 from enum import Enum, unique
 from math import floor
-from random import randrange
+from random import randrange, sample
 
 from .encounter import Encounter
 
@@ -26,6 +26,33 @@ class RoomType(Enum):
     DEATH = 7
     ENEMY = 8
     START = 9
+
+
+@unique
+class Arcana(Enum):
+    """Major arcana. Used to select arcana of enemies present on the floor"""
+    FOOL = "Fool"
+    MAGICIAN = "Magician"
+    PRIESTESS = "Priestess"
+    EMPRESS = "Empress"
+    EMPEROR = "Emperor"
+    HIEROPHANT = "Hierophant"
+    LOVERS = "Lovers"
+    CHARIOT = "Chariot"
+    STRENGTH = "Strength"
+    HERMIT = "Hermit"
+    WHEEL_OF_FORTUNE = "Wheel of Fortune"
+    JUSTICE = "Justice"
+    HANGED_MAN = "Hanged Man"
+    DEATH = "Death"
+    TEMPERANCE = "Temperance"
+    DEVIL = "Devil"
+    TOWER = "Tower"
+    STAR = "Star"
+    MOON = "Moon"
+    SUN = "Sun"
+    JUDGEMENT = "Judgement"
+    WORLD = "World"
 
 
 class Deck:
@@ -81,6 +108,10 @@ class Dungeon:
         assert(x < self.dungeon_size)
         assert(y >= 0)
         assert(y < self.dungeon_size)
+
+    def choose_arcana(self):
+        options = [arcana for arcana in Arcana]
+        self.arcana = sample(options, randrange(4, 6))
 
     def get_room_type(self, x, y):
         self._check_valid_coords(x, y)
@@ -194,9 +225,13 @@ class HTMLRenderer:
         add_line('')
 
         # Render dungeon
+
+        # Top border
         border = '*' + ('~' * 60) + '*'
         add_line(border)
         add_line('')
+
+        # Render rooms
         for row in self._dungeon._rooms:
             if not all(room.room_type == RoomType.NONE for room in row):
                 row_render = ' ' * HTMLRenderer.ROW_MARGIN
@@ -209,6 +244,14 @@ class HTMLRenderer:
                 add_line(row_render)
                 add_line(hall_row_render)
         add_line(border)
+        add_line('')
+
+        # List arcana
+        arcana_render = 'Arcana: '
+        for arcana in self._dungeon.arcana:
+            arcana_render = arcana_render + arcana.value +', '
+        arcana_render = arcana_render[0: -2]
+        add_line(arcana_render)
         add_line('')
 
         # Render encounters
@@ -257,6 +300,9 @@ def generate():
         return candidates[randrange(len(candidates))]
 
     # Generate dungeon
+
+    dungeon.choose_arcana()
+
     # Start in a random direction
     direction = choose_direction([Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT])
 
