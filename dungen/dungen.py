@@ -76,9 +76,6 @@ class Deck:
         assert(len(self._cards) >= 0)
         return self._cards.pop(randrange(len(self._cards)))
 
-    def cards_drawn(self):
-        return self._initial_count - len(self._cards)
-
 
 class Room:
     """Represents one room in the dungeon"""
@@ -123,8 +120,6 @@ class Dungeon:
 
     def set_room_type(self, x, y, room_type):
         if self.room_written(x, y):
-            renderer = HTMLRenderer(self)
-            renderer.render()
             print('Tried to overwrite room at {}, {}'.format(x, y))
             assert(False)
         self._rooms[y][x].room_type = room_type
@@ -331,8 +326,6 @@ def generate():
         """
         candidates = [c for c in candidate_directions if dungeon.can_build_direction(c, x, y)]
         if len(candidates) == 0:
-            renderer = HTMLRenderer(dungeon)
-            renderer.render()
             print("No valid directions to branch")
             assert(False)
         return candidates[randrange(len(candidates))]
@@ -345,7 +338,8 @@ def generate():
     direction = choose_direction([Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT])
 
     dungeon.set_room_type(x, y, RoomType.START)
-    while not (deck.cards_drawn() >= 7 and stairs_drawn):
+    rooms_placed = 0
+    while not (rooms_placed >= 7 and stairs_drawn):
         # Make a door and move to the next position
         if direction == Direction.RIGHT:
             dungeon.add_right_door(x, y)
@@ -363,13 +357,24 @@ def generate():
             dungeon.add_down_door(x, y)
 
         # Add a card to the current space
-        room = deck.draw()
-        if room == RoomType.STAIRCASE:
-            if stairs_drawn:
-                room = RoomType.SAFE
-            else:
-                stairs_drawn = True
+        # If we drew the stairs earlier and it's been 7 cards, use them
+        if rooms_placed >= 6 and stairs_drawn:
+            room = RoomType.STAIRCASE
+        else:
+            room = deck.draw()
+            while room is RoomType.STAIRCASE:
+                if stairs_drawn:
+                    room = RoomType.SAFE
+                else:
+                    stairs_drawn = True
+                    # If we drew the stairs before the 7th room, set it aside
+                    if rooms_placed < 6:
+                        room = deck.draw()
+                    else:
+                        break
+
         dungeon.set_room_type(x, y, room)
+        rooms_placed = rooms_placed + 1
         hall_length = hall_length + 1
 
         # Branch if we need to. Choose the start of the new branch randomly
