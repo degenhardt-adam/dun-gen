@@ -25,14 +25,10 @@ class Enemy():
 class Encounter():
     """Represents one encounter in an encounter room"""
 
-    # Iterated every time we make a new encounter
-    next_id = 1
-
-    def __init__(self, arcana):
+    def __init__(self, arcana, name):
         # Which arcana are on this floor
         self._arcana = arcana
-        self.id = Encounter.next_id
-        Encounter.next_id = Encounter.next_id + 1
+        self.name = name
         self._enemies = []
 
     def generate_enemies(self, difficulty):
@@ -95,5 +91,5 @@ class Encounter():
                 level_string = ' (WL-1)'
             enemies_string = enemies_string + enemy.arcana.value + level_string + ', '
         enemies_string = enemies_string[0: -2]
-        return '<pre> - ' + enemies_string + '<br /></pre>'
+        return '<pre> {}. '.format(self.name) + enemies_string + '<br /></pre>'
         

@@ -95,6 +95,7 @@ class Dungeon:
         self._rooms = \
             [[Room() for i in range(dungeon_size)] for j in range(dungeon_size)]
         self.dungeon_size = dungeon_size
+        self._next_encounter_id = 1
 
         # Keep track of the horizontal bounds of the dungeon so it can be cropped during render
         self.leftmost = dungeon_size
@@ -127,8 +128,15 @@ class Dungeon:
             print('Tried to overwrite room at {}, {}'.format(x, y))
             assert(False)
         self._rooms[y][x].room_type = room_type
-        if room_type in [RoomType.ENEMY, RoomType.GUARDED_TREASURE]:
-            self._rooms[y][x].encounter = Encounter(self.arcana)
+
+        # Rooms with encounters
+        if room_type is RoomType.ENEMY:
+            self._rooms[y][x].encounter = Encounter(
+                self.arcana, 'E{}'.format(self._next_encounter_id))
+            self._next_encounter_id = self._next_encounter_id + 1
+            self.encounters.append(self._rooms[y][x].encounter)
+        elif room_type is RoomType.GUARDED_TREASURE:
+            self._rooms[y][x].encounter = Encounter(self.arcana, 'X$')
             self.encounters.append(self._rooms[y][x].encounter)
 
         # Update horizontal bounds
@@ -219,7 +227,7 @@ class HTMLRenderer:
         RoomType.GUARDED_TREASURE: 'X$',
         RoomType.HAZARD: '/\\',
         RoomType.DEATH: '8X',
-        RoomType.ENEMY: '\\O',
+        RoomType.ENEMY: 'E1',
         RoomType.START: '\\\\'
     }
 
@@ -265,7 +273,12 @@ class HTMLRenderer:
                 hall_row_render = ' ' * HTMLRenderer.ROW_MARGIN
                 for room in row[self._dungeon.leftmost : self._dungeon.rightmost + 1]:
                     right_hall = '__' if room.right_door_exists else '  '
-                    row_render = row_render + HTMLRenderer.sprites[room.room_type] + right_hall
+                    room_sprite = ''
+                    if room.encounter is not None:
+                        room_sprite = room.encounter.name[:2]
+                    else:
+                        room_sprite = HTMLRenderer.sprites[room.room_type]
+                    row_render = row_render + room_sprite + right_hall
                     down_hall = ' |' if room.down_door_exists else '  '
                     hall_row_render = hall_row_render + down_hall + '  '
                 add_line(row_render)
