@@ -8,6 +8,6 @@ image generation
                 standard small?
                 big?
     serve image
-        try flask send_file
-        as link that opens image in new tab by default, or you can download
+        add link to html
+            maybe time to clean up html generation?
         
