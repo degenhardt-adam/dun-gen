@@ -1,0 +1,13 @@
+image generation
+    create image
+        try ImageDraw module
+        size
+            volatile
+            options
+                cropped?
+                standard small?
+                big?
+    serve image
+        try flask send_file
+        as link that opens image in new tab by default, or you can download
+        
