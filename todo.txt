@@ -1,13 +1,21 @@
 image generation
-    create image
-        try ImageDraw module
-        size
-            volatile
-            options
-                cropped?
-                standard small?
-                big?
-    serve image
-        add link to html
-            maybe time to clean up html generation?
+    store dungeon data in session
+    add endpoint(s) for images
+        generate image based on dungeon data
+            use pillow
+                ImageDraw
+            algorithm for generation
+                make image correct size
+                    allow variable size
+                    default to cropped
+                choose starting location
+                iterate through dungeon data and draw shapes
+                draw tray
+                write text on tray
+            store as file-like object in memory
+        send image
+    add link to html
+        maybe time to clean up html generation?
+        how to specify image size?
+            text field
         
