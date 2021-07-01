@@ -1,3 +1,7 @@
+go through design below and find the highest risk stuff
+    understanding of sessions
+    html text fields, buttons, open in new tab, etc
+
 image generation
     store dungeon data in session
     add endpoint(s) for images
@@ -15,7 +19,16 @@ image generation
             store as file-like object in memory
         send image
     add link to html
-        maybe time to clean up html generation?
+        separate out dungeon html render from the full html page
+            full html page?
+                some kind of template?
+                    django.template
+                    ...
+                html generation library?
+                    yattag
+                    ...
+                hand-coded
         how to specify image size?
-            text field
+            text field with buttons
+    remove kanji stuff
         
