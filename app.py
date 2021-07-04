@@ -1,5 +1,5 @@
 from dungen.dungen import generate, HTMLRenderer
-from flask import Flask, send_file
+from flask import Flask, render_template, send_file
 from pathlib import Path
 
 app = Flask(__name__)
@@ -8,7 +8,8 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     dungeon = generate()
-    return HTMLRenderer(dungeon).render()
+    dungeon_render = HTMLRenderer(dungeon).render()
+    return render_template('main.html', dungeon_render=dungeon_render)
 
 
 @app.route('/duck')
