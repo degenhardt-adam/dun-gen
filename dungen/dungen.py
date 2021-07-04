@@ -396,9 +396,12 @@ def generate():
 
     dungeon.generate_encounters()
 
+    return dungeon
+
     # Print the dungeon render
     renderer = HTMLRenderer(dungeon)
     return renderer.render()
 
 if __name__ == "__main__":
-    print(generate())
+    dungeon = generate()
+    print(HTMLRenderer(dungeon).render())

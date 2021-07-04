@@ -1,4 +1,4 @@
-from dungen.dungen import generate
+from dungen.dungen import generate, HTMLRenderer
 from flask import Flask, send_file
 from pathlib import Path
 
@@ -7,7 +7,8 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return generate()
+    dungeon = generate()
+    return HTMLRenderer(dungeon).render()
 
 
 @app.route('/duck')
