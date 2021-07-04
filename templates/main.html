@@ -6,5 +6,11 @@
 </head>
 <body>
     {{ dungeon_render|safe }}
+    <br />
+    <h1>Get an image for use with tools like roll20</h1>
+    <p>Room grid size<br />Rows        Columns</p>
+    <input type="number" id="rows">
+    <input type="number" id="columns">
+    <a href="{{ url_for('kanji') }}">hrrrAGGH!</a>
 </body>
 </html>

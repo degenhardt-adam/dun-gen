@@ -3,10 +3,9 @@ go through design below and find the highest risk stuff
 
 image generation
     front end
-        separate out dungeon html render from the full html page
-            use flask template for html page
-            have dungeon generator's html render just return the text for the dungeon
         add size fields and link to image
+            get the formatting right
+            make the link url change to include inputs
     store dungeon data in session
     add endpoint(s) for images
         generate image based on dungeon data
